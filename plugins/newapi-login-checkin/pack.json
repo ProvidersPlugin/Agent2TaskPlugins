@@ -1,0 +1,10 @@
+{
+  "id": "agent2api-task-newapi-login-checkin",
+  "name": "New API 登录保活与签到",
+  "version": "1.0.0",
+  "category": "scheduled_task",
+  "target": "task-script",
+  "entry": "script.js",
+  "description": "面向 New API / One API 类站点的定时登录保活、余额查询与自动签到插件。",
+  "homepage": "https://github.com/ProvidersPlugin/Agent2TaskPlugins"
+}
