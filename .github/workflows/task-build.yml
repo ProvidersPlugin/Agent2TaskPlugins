@@ -1,0 +1,91 @@
+name: release-task
+
+on:
+  push:
+    tags:
+      - 'task-*-v*'
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: 'plugins/ 下的定时任务插件目录'
+        required: true
+        default: newapi-login-checkin
+        type: string
+      version:
+        description: '插件版本号；对应的 task-<plugin>-v<version> tag 必须已存在'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: task-dispatch-${{ github.ref }}-${{ inputs.plugin }}-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 解析定时任务插件版本
+        id: meta
+        shell: bash
+        env:
+          INPUT_PLUGIN: ${{ inputs.plugin }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            REF="$GITHUB_REF_NAME"
+          else
+            REF="task-$INPUT_PLUGIN-v$INPUT_VERSION"
+          fi
+          if [[ ! "$REF" =~ ^task-([a-z][a-z0-9-]*)-v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?)$ ]]; then
+            printf '%s\n' '::error::定时任务插件 tag 必须为 task-<plugin>-v<version>'
+            exit 1
+          fi
+          PLUGIN="${BASH_REMATCH[1]}"
+          VERSION="${BASH_REMATCH[2]}"
+          printf 'ref=%s\nplugin=%s\nversion=%s\n' "$REF" "$PLUGIN" "$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ steps.meta.outputs.ref }}
+          persist-credentials: false
+
+      - name: 核对包版本并固定源码提交
+        id: source
+        shell: python
+        env:
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          import json, os, pathlib, re, subprocess
+          folder = pathlib.Path('plugins') / os.environ['PLUGIN']
+          manifest = json.loads((folder / 'pack.json').read_text(encoding='utf-8'))
+          script_text = (folder / 'script.js').read_text(encoding='utf-8')
+          match = re.search(r'/\*\s*@agent2api-task-plugin\s*([\s\S]*?)\*/', script_text)
+          if not match:
+              raise ValueError('script.js 缺少 @agent2api-task-plugin 头部声明块')
+          meta = json.loads(match.group(1))
+          expected_id = f"agent2api-task-{os.environ['PLUGIN']}"
+          if manifest.get('id') != expected_id or meta.get('id') != expected_id:
+              raise ValueError('定时任务插件标识与目录名不一致')
+          if manifest.get('version') != os.environ['VERSION'] or meta.get('version') != manifest['version']:
+              raise ValueError('源码 tag、pack.json 和 script.js 声明的版本号必须一致')
+          if manifest.get('category') != 'scheduled_task' or manifest.get('target') != 'task-script' or manifest.get('entry') != 'script.js':
+              raise ValueError('pack.json 缺少正确的 category/target/entry 声明')
+          revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write(f'sha={revision}\n')
+
+      - name: 派发定时任务插件构建
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BUILDER_DISPATCH_TOKEN }}
+          repository: Agent2Builder/agent2api-providers-releases
+          event-type: task-release
+          client-payload: '{"ref":"${{ steps.meta.outputs.ref }}","sha":"${{ steps.source.outputs.sha }}","plugin":"${{ steps.meta.outputs.plugin }}","version":"${{ steps.meta.outputs.version }}"}'
+
+      - name: 构建位置
+        run: printf '%s\n' 'https://github.com/Agent2Builder/agent2api-providers-releases/actions/workflows/task-release.yml'

@@ -14,22 +14,25 @@
 
 ## 快速导入使用
 
-1. 打开 Agent2API → 进入侧边栏 **「插件」** → 筛选 **「定时任务插件」** → 点击 **「导入脚本/包」**。
-2. 选择本仓库中任意插件的 `script.js` 文件（或直接粘贴文件内容）完成导入。
-3. 在插件卡片上点击 **「建任务」**，填写站点网址、账号和密码（自动加密保存），点击 **「立即登录验证」** 即可。
+1. 打开 Agent2API → 进入侧边栏 **「定时任务」** → **「任务插件」**（或在侧边栏 **「插件 → 其他插件 → 定时任务」** 中管理）→ 点击 **「导入脚本/包」**，选择本仓库中的 `script.js` 或打包好的 `.zip` 文件（`.zip` 包也支持直接在 **「插件 → 更多操作 → 从文件安装」** 中拖入安装）。
+2. 在插件卡片上点击 **「建任务」**，填写站点网址、账号和密码（自动加密保存），点击 **「立即登录验证」** 即可。
 
 ## 本地校验与打包
 
 使用 Node.js 20+ 一键校验全部插件格式并生成商店分发包 `{id}-{version}-task-script.zip` 及 `.sha256`：
 
 ```bash
-node scripts/pack.mjs
+# 仅校验元数据与语法（不写出 dist/）
+node scripts/pack.mjs --check-only
+
+# 打包全部或指定插件
+node scripts/pack.mjs [plugin]
 ```
 
-如需附加官方 Ed25519 签名（用于官方商店发布），传入环境变量即可：
+如需附加官方 Ed25519 签名（用于官方商店发布），传入签名密钥 JSON 文件或环境变量即可；推送 `task-<plugin>-v<version>` 标签后工作流会自动完成签名打包、GitHub Release 发布与官网商店同步：
 
 ```bash
-AGENT2API_PLUGIN_KEY_PEM="..." AGENT2API_PLUGIN_KEY_ID="official-2026" node scripts/pack.mjs
+node scripts/pack.mjs --key /path/to/plugin-signing-key.json --require-signature
 ```
 
 ## 开源协议
