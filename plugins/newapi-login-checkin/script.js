@@ -2,7 +2,7 @@
 {
   "id": "agent2api-task-newapi-login-checkin",
   "name": "New API 登录保活与签到",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "面向 New API / One API 类站点，支持可配置网址、账号与加密密码，自动维护登录会话、查询剩余额度并按计划执行保活或签到。",
   "defaultCron": "0 9 * * *",
   "defaultTimezone": "Asia/Shanghai",

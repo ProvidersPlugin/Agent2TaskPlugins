@@ -1,7 +1,7 @@
 {
   "id": "agent2api-task-newapi-login-checkin",
   "name": "New API 登录保活与签到",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "category": "scheduled_task",
   "target": "task-script",
   "entry": "script.js",
