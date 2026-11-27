@@ -1,6 +1,6 @@
 # New API 登录保活与签到
 
-适用于 **New API / One API / AgentRouter** 等使用 `/api/user/login` + `Cookie` + `New-Api-User` 鉴权体系的站点。
+适用于 **New API / One API** 等使用 `/api/user/login` + `Cookie` + `New-Api-User` 鉴权体系的站点。
 
 ## 功能特点
 

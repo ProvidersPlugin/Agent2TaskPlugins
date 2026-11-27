@@ -3,7 +3,7 @@
   "id": "agent2api-task-newapi-login-checkin",
   "name": "New API 登录保活与签到",
   "version": "1.0.0-beta.1",
-  "description": "面向 New API / One API 类站点（如 AgentRouter 等），支持可配置网址、账号与加密密码，自动维护登录会话、查询剩余额度并按计划执行保活或签到。",
+  "description": "面向 New API / One API 类站点，支持可配置网址、账号与加密密码，自动维护登录会话、查询剩余额度并按计划执行保活或签到。",
   "defaultCron": "0 9 * * *",
   "defaultTimezone": "Asia/Shanghai",
   "defaultTimeout": 60,
@@ -17,7 +17,7 @@
       "label": "站点网址",
       "type": "text",
       "required": true,
-      "placeholder": "https://agentrouter.org",
+      "placeholder": "https://example.com",
       "description": "填写站点根地址，不要包含 /api 路径"
     },
     {
